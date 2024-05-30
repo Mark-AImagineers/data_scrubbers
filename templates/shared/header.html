@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Data Scrubber V1.0.0</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="robots" content="all,follow">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <!--Google-->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+
+    <!--Main Theme-->
+    <link rel="stylesheet" href="{% static 'css/style.default.css' %}" id="theme-stylesheet">
+
+    <!--Custom-->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+    <!--Font Awesome-->
+    <script src="https://kit.fontawesome.com/f896476628.js" crossorigin="anonymous"></script>
+
+    <!--HTMX-->
+    <script src="https://unpkg.com/htmx.org"></script>
+
+</head>
