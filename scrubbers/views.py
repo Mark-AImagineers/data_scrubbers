@@ -1,20 +1,26 @@
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from .config import api_key
 from .models import Region, WeatherData, HourlyTemperature
+import requests
+
 
 ## FUNCTIONS
 
-def build_api_url(lat, lon, api_key):
+def build_api_url(lat, lon, date1, date2, api_key):
     base_url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
-    location = f"{lat},{lon}"
+    location = f"{lat},{lon}/"
+    startdate = f"{date1}/"
+    enddate = f"{date2}/"
     query_params = "?unitGroup=metric&include=days%2Chours%2Calerts%2Ccurrent%2Cevents&contentType=json"
-    api_url = f"{base_url}{location}{query_params}&key={api_key}"
+    if date1==date2:
+        date2 = ""
+        
+    if date2=="":
+        api_url = f"{base_url}{location}{startdate}{query_params}&key={api_key}"
+    else:
+        api_url = f"{base_url}{location}{startdate}{enddate}{query_params}&key={api_key}"
     return api_url
-
-
-
-
-
 
 ## VIEWS
 
@@ -22,6 +28,57 @@ def index(request):
     return render(request, 'index.html')
 
 def weather_scrubber(request):
+    if request.method == 'POST':
+        regions = Region.objects.all()
+        API = api_key
+        startdate = request.POST['date1']
+        enddate = request.POST['date2']
+        print(f"{startdate} to {enddate}")
+
+        for region in regions:
+            url = build_api_url(region.latitude, region.longitude, startdate, enddate, API)
+            response = requests.get(url)
+            if response.status_code == 200:
+                data = response.json()
+                print(data)
+                for day in data.get('days', []):
+                    weather_entry = WeatherData(
+                        region=region,
+                        datetime=day['datetime'],
+                        temp=day['temp'],
+                        feels_like=day['feelslike'],
+                        humidity=day['humidity'],
+                        dew_point=day['dew'],
+                        precipitation=day['precip'],
+                        precipitation_prob=day['precipprob'],
+                        snow=day['snow'],
+                        snow_depth=day['snowdepth'],
+                        wind_gust=day['windgust'],
+                        wind_speed=day['windspeed'],
+                        wind_direction=day['winddir'],
+                        pressure=day['pressure'],
+                        visibility=day['visibility'],
+                        cloud_cover=day['cloudcover'],
+                        solar_radiation=day['solarradiation'],
+                        solar_energy=day['solarenergy'],
+                        uv_index=day['uvindex'],
+                        severe_risk=day['severerisk'],
+                        conditions=day['conditions'],
+                        icon=day['icon'],
+                    )
+                    weather_entry.save()
+                #Error handling here    
+
+                    for hour in day.get('hours', []):
+                        HourlyTemperature.objects.create(
+                            weather_data=weather_entry,
+                            hour=int(hour['datetime'].split(':')[0]),  # Extracting the hour part
+                            temperature=hour['temp'],
+                    #error handling here
+                        )
+            else:
+                return JsonResponse({'status': 'error','message': f'Error fetching weather data for {region.name}'})
+        return JsonResponse({'status': 'success', 'message': 'Weather data fetched and stored successfully!'})
     return render(request, 'weather_scrubber.html')
 
 def manage_regions(request):
@@ -47,15 +104,55 @@ def delete_entry(request, regional_id):
     entry.delete()
     return redirect('manage_regions')
 
-# def fetch_and_store_weather_data(request):
-#     regions = Region.objects.all()
-#     API = api_key
+def fetch_and_store_weather_data(request):
+    if request.method == 'POST':
+        regions = Region.objects.all()
+        API = api_key
+        startdate = request.session.get('startdate')
+        enddate = request.session.get('enddate')
+        print(f"{startdate} to {enddate}")
 
-#     for regions
+        for region in regions:
+            url = build_api_url(region.latitude, region.longitude, startdate, enddate, API)
+            response = requests.get(url)
+            if response.status_code == 200:
+                data = response.json()
+                for day in data.get('days', []):
+                    weather_entry = WeatherData(
+                        region=region,
+                        datetime=day['datetime'],
+                        temp=day['temp'],
+                        feels_like=day['feelslike'],
+                        humidity=day['humidity'],
+                        dew_point=day['dew'],
+                        precipitation=day['precip'],
+                        precipitation_prob=day['precipprob'],
+                        snow=day['snow'],
+                        snow_depth=day['snowdepth'],
+                        wind_gust=day['windgust'],
+                        wind_speed=day['windspeed'],
+                        wind_direction=day['winddir'],
+                        pressure=day['pressure'],
+                        visibility=day['visibility'],
+                        cloud_cover=day['cloudcover'],
+                        solar_radiation=day['solarradiation'],
+                        solar_energy=day['solarenergy'],
+                        uv_index=day['uvindex'],
+                        severe_risk=day['severerisk'],
+                        conditions=day['conditions'],
+                        icon=day['icon'],
+                    )
+                    weather_entry.save()
 
+                    for hour in day.get('hours', []):
+                        HourlyTemperature.objects.create(
+                            weather_data=weather_entry,
+                            hour=int(hour['datetime'].split(':')[0]),  # Extracting the hour part
+                            temperature=hour['temp'],
+                        )
+        return JsonResponse({'status': 'success', 'message': 'Weather data fetched and stored successfully!'})
 
 ## NOTES
-
 
 # Weather Location:
 # National Capital Region - Manila: +14.5995° N, +120.9842° E
