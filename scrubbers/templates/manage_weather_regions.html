@@ -1,0 +1,86 @@
+{% load static %}
+
+{% include 'shared/header.html' %}
+
+<body>
+    <div class="header mx-3 mb-3">
+        <h1>Manage Weather Regions</h1>
+    </div>
+    <div class="mx-3">
+        <p><a href={%url 'weather_scrubber'%}>back</a></p>
+    </div>
+    <br>
+    <div class="mx-3">
+        <form id="regionForm" autocomplete=off method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="mt-2" for="region_name">Region Name:</label>
+                <input class="form-control" type="text" name="region_name" id="region_name" required>
+            </div>
+            <div class="form-group">
+                <label class="mt-2" for="region_country">Country:</label>
+                <select name="region_country" id="region_country" class="form-control" required>
+                    <option value="">Select a country</option>
+                    <option value="Philippines">Philippines</option>
+                    <option value="Australia">Australia</option>
+                    <option value="New Zealand">New Zealand</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="mt-2" for="region_center">Region Center:</label>
+                <input class="form-control" type="text" name="region_center" id="region_center" required>
+            </div>
+            <div class="form-group">
+                <label  class="mt-2"for="region_lat">Latitude:</label>
+                <input class="form-control" type="text" name="region_lat" id="region_lat" required>
+            </div>
+            <div class="form-group">
+                <label class="mt-2" for="region_lon">Longitude:</label>
+                <input class="form-control" type="text" name="region_lon" id="region_lon" required>
+            </div>
+            <button onclick="sumbitForm()" type="submit" class="btn btn-primary my-4">Submit</button>
+        </form>
+        <div class="d-flex justify-content-end mx-3">
+            <a href={% url 'manage_regions' %}><button class="btn">Refresh</button></a>
+        </div>
+    </div>
+    <br>
+    <div class="card card-table mx-3 mb-5">
+        <table class="table table-hover table-borderless align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Country</th>
+                    <th>Region</th>
+                    <th>Center</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for region in regions %}
+                <tr>
+                    <td>{{region.country}}</td>
+                    <td>{{region.name}}</td>
+                    <td>{{region.regional_center}}</td>
+                    <td>{{region.latitude}}</td>
+                    <td>{{region.longitude}}</td>
+                    <td>
+                        <form action="{% url 'delete_entry' region.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function submitForm() {
+            document.getElementsById('regionForm').submit();
+        }
+    </script>
+
+{% include 'shared/footer.html' %}

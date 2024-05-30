@@ -1,7 +1,15 @@
-from django.shortcuts import render
-
+from django.shortcuts import render, redirect
+from .config import api_key
+from .models import Region, WeatherData, HourlyTemperature
 
 ## FUNCTIONS
+
+def build_api_url(lat, lon, api_key):
+    base_url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
+    location = f"{lat},{lon}"
+    query_params = "?unitGroup=metric&include=days%2Chours%2Calerts%2Ccurrent%2Cevents&contentType=json"
+    api_url = f"{base_url}{location}{query_params}&key={api_key}"
+    return api_url
 
 
 
@@ -15,6 +23,36 @@ def index(request):
 
 def weather_scrubber(request):
     return render(request, 'weather_scrubber.html')
+
+def manage_regions(request):
+    if request.method == 'POST':
+        region_name = request.POST['region_name']
+        region_country = request.POST['region_country']
+        region_center = request.POST['region_center']
+        region_lat = request.POST['region_lat']
+        region_lon = request.POST['region_lon']
+        new_region = Region(name=region_name, country=region_country, regional_center=region_center, latitude=region_lat, longitude=region_lon)
+        new_region.save()
+
+        regions = Region.objects.all()
+        context = {'regions': regions}
+        return render(request,'manage_weather_regions.html',context)
+    else:
+        regions = Region.objects.all()
+        context = {'regions': regions}
+        return render(request,'manage_weather_regions.html', context)
+
+def delete_entry(request, regional_id):
+    entry = Region.objects.get(id=regional_id)
+    entry.delete()
+    return redirect('manage_regions')
+
+# def fetch_and_store_weather_data(request):
+#     regions = Region.objects.all()
+#     API = api_key
+
+#     for regions
+
 
 ## NOTES
 
@@ -38,4 +76,4 @@ def weather_scrubber(request):
 # Caraga - Butuan: +8.9475° N, +125.5406° E
 # Bangsamoro - Cotabato: +7.2236° N, +124.2464° E
 
-# Time - 8:00 AM to 10:00 PM
+# Time - 24 hours
