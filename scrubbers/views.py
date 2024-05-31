@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from .config import api_key
 from .models import Region, WeatherData, HourlyTemperature
 import requests
-
+from django.contrib import messages
 
 ## FUNCTIONS
 
@@ -42,45 +42,59 @@ def weather_scrubber(request):
                 data = response.json()
                 print(data)
                 for day in data.get('days', []):
-                    weather_entry = WeatherData(
-                        region=region,
-                        datetime=day['datetime'],
-                        temp=day['temp'],
-                        feels_like=day['feelslike'],
-                        humidity=day['humidity'],
-                        dew_point=day['dew'],
-                        precipitation=day['precip'],
-                        precipitation_prob=day['precipprob'],
-                        snow=day['snow'],
-                        snow_depth=day['snowdepth'],
-                        wind_gust=day['windgust'],
-                        wind_speed=day['windspeed'],
-                        wind_direction=day['winddir'],
-                        pressure=day['pressure'],
-                        visibility=day['visibility'],
-                        cloud_cover=day['cloudcover'],
-                        solar_radiation=day['solarradiation'],
-                        solar_energy=day['solarenergy'],
-                        uv_index=day['uvindex'],
-                        severe_risk=day['severerisk'],
-                        conditions=day['conditions'],
-                        icon=day['icon'],
-                    )
-                    weather_entry.save()
-                #Error handling here    
 
-                    for hour in day.get('hours', []):
-                        HourlyTemperature.objects.create(
-                            weather_data=weather_entry,
-                            hour=int(hour['datetime'].split(':')[0]),  # Extracting the hour part
-                            temperature=hour['temp'],
-                    #error handling here
+                    exists = WeatherData.objects.filter(
+                        region=region, 
+                        datetime=day['datetime']
+                        ).exists()
+                    
+                    if not exists:
+                        weather_entry = WeatherData(
+                            region=region,
+                            datetime=day['datetime'],
+                            temp=day['temp'],
+                            feels_like=day['feelslike'],
+                            humidity=day['humidity'],
+                            dew_point=day['dew'],
+                            precipitation=day['precip'],
+                            precipitation_prob=day['precipprob'],
+                            snow=day['snow'],
+                            snow_depth=day['snowdepth'],
+                            wind_gust=day['windgust'],
+                            wind_speed=day['windspeed'],
+                            wind_direction=day['winddir'],
+                            pressure=day['pressure'],
+                            visibility=day['visibility'],
+                            cloud_cover=day['cloudcover'],
+                            solar_radiation=day['solarradiation'],
+                            solar_energy=day['solarenergy'],
+                            uv_index=day['uvindex'],
+                            severe_risk=day['severerisk'],
+                            conditions=day['conditions'],
+                            icon=day['icon'],
                         )
-            else:
-                return JsonResponse({'status': 'error','message': f'Error fetching weather data for {region.name}'})
-        return JsonResponse({'status': 'success', 'message': 'Weather data fetched and stored successfully!'})
-    return render(request, 'weather_scrubber.html')
+                        weather_entry.save()
+                        #Error handling here    
 
+                        for hour in day.get('hours', []):
+                            HourlyTemperature.objects.create(
+                                weather_data=weather_entry,
+                                hour=int(hour['datetime'].split(':')[0]),  # Extracting the hour part
+                                temperature=hour['temp'],
+                            )
+                            #error handling here
+                    else:
+                        print(f"Weather data for {region.name} on {day['datetime']} already exists. Skipping...")
+            else:
+                messages.error(request, f"Error fetching data for {region.name} with status code {response.status_code}.")
+                return redirect('weather_scrubber')
+        
+        messages.success(request, 'Weather data successfully scrubbed!')
+        return redirect('weather_scrubber')
+
+    else:
+        return render(request, 'weather_scrubber.html')
+                    
 def manage_regions(request):
     if request.method == 'POST':
         region_name = request.POST['region_name']
@@ -104,53 +118,7 @@ def delete_entry(request, regional_id):
     entry.delete()
     return redirect('manage_regions')
 
-def fetch_and_store_weather_data(request):
-    if request.method == 'POST':
-        regions = Region.objects.all()
-        API = api_key
-        startdate = request.session.get('startdate')
-        enddate = request.session.get('enddate')
-        print(f"{startdate} to {enddate}")
 
-        for region in regions:
-            url = build_api_url(region.latitude, region.longitude, startdate, enddate, API)
-            response = requests.get(url)
-            if response.status_code == 200:
-                data = response.json()
-                for day in data.get('days', []):
-                    weather_entry = WeatherData(
-                        region=region,
-                        datetime=day['datetime'],
-                        temp=day['temp'],
-                        feels_like=day['feelslike'],
-                        humidity=day['humidity'],
-                        dew_point=day['dew'],
-                        precipitation=day['precip'],
-                        precipitation_prob=day['precipprob'],
-                        snow=day['snow'],
-                        snow_depth=day['snowdepth'],
-                        wind_gust=day['windgust'],
-                        wind_speed=day['windspeed'],
-                        wind_direction=day['winddir'],
-                        pressure=day['pressure'],
-                        visibility=day['visibility'],
-                        cloud_cover=day['cloudcover'],
-                        solar_radiation=day['solarradiation'],
-                        solar_energy=day['solarenergy'],
-                        uv_index=day['uvindex'],
-                        severe_risk=day['severerisk'],
-                        conditions=day['conditions'],
-                        icon=day['icon'],
-                    )
-                    weather_entry.save()
-
-                    for hour in day.get('hours', []):
-                        HourlyTemperature.objects.create(
-                            weather_data=weather_entry,
-                            hour=int(hour['datetime'].split(':')[0]),  # Extracting the hour part
-                            temperature=hour['temp'],
-                        )
-        return JsonResponse({'status': 'success', 'message': 'Weather data fetched and stored successfully!'})
 
 ## NOTES
 

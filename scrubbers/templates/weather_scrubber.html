@@ -10,6 +10,17 @@
         <p><a href={% url 'manage_regions' %}>Manage Weather Regions</a></p>
     </div>
     <br>
+    <div class="card mx-3 mb-4">
+        <div class="card-body">
+            {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class=""{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
     <div class="mx-3">
         <form autocomplete="off" method="post">
             {% csrf_token %}
