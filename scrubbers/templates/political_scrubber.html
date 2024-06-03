@@ -1,0 +1,31 @@
+{% load static %}
+
+{% include 'shared/header.html' %}
+
+<body>
+    <div class="header mx-3 mb-3">
+        <h1>Politics News Scrubber</h1>
+    </div>
+    <div class="mx-3">
+        <p><a href={% url 'index' %}>back</a></p>
+    </div>
+    <br>
+    <div class="mx-3">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3"><h2>Philippines Political News</h2></div>
+            <div class="form-group">
+                <label class="mt-2" for="page_num1">Starting Page:</label>
+                <input class="form-control" type="page_num1" name="page_num1" id="page_num1">
+            </div>
+            <div class="form-group">
+                <label class="mt-2" for="page_num2">Ending Page:</label>
+                <input class="form-control" type="page_num2" name="page_num2" id="page_num2">
+            </div>
+            <button class="my-4 btn btn-primary" type="submit">Submit</button>
+
+        </form>
+    </div>
+    
+
+{% include 'shared/footer.html' %}

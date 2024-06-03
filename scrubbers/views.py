@@ -1,9 +1,30 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from .config import api_key
-from .models import Region, WeatherData, HourlyTemperature
+from .models import Region, WeatherData, HourlyTemperature, PoliticalNews
 import requests
 from django.contrib import messages
+from django.shortcuts import render
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+#headless mode
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--window-size=1920,1080")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+
+service = ChromeService(executable_path='d:/codes/chromedriver-win32/chromedriver.exe')
+driver = webdriver.Chrome(service=service, options=chrome_options)
+
+
+
 
 ## FUNCTIONS
 
@@ -21,6 +42,11 @@ def build_api_url(lat, lon, date1, date2, api_key):
     else:
         api_url = f"{base_url}{location}{startdate}{enddate}{query_params}&key={api_key}"
     return api_url
+
+
+
+
+
 
 ## VIEWS
 
@@ -69,7 +95,7 @@ def weather_scrubber(request):
                             solar_radiation=day['solarradiation'],
                             solar_energy=day['solarenergy'],
                             uv_index=day['uvindex'],
-                            severe_risk=day['severerisk'],
+                            severe_risk=day.get('severerisk', 0),
                             conditions=day['conditions'],
                             icon=day['icon'],
                         )
@@ -117,6 +143,105 @@ def delete_entry(request, regional_id):
     entry = Region.objects.get(id=regional_id)
     entry.delete()
     return redirect('manage_regions')
+
+def politics_scrubber(request):
+    if request.method == 'POST':
+        start_page = request.POST.get('page_num1','')
+        end_page = request.POST.get('page_num2','')
+
+        if not start_page or start_page == "":
+            target_urls = ["https://newsinfo.inquirer.net/category/inquirer-headlines/nation"]
+        else:
+            start_page = int(start_page) if start_page else 1
+            end_page = int(end_page) if end_page else start_page
+
+            target_urls = [f"https://newsinfo.inquirer.net/category/inquirer-headlines/nation/page/{page}/"
+                           for page in range(start_page, end_page + 1)]
+            
+            scrape_and_save_articles(target_urls)
+
+        context = {
+            'message': f'Successfully scraped articles from {len(target_urls)} pages.'
+        }
+        return render(request, 'political_scrubber.html', context)
+    else:
+        return render(request, 'political_scrubber.html')
+    
+def get_article_links(target_urls):
+    article_links = []
+    for url in target_urls:
+        driver.get(url)
+        
+        # Wait for the content to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'a[href^="https://newsinfo.inquirer.net/"]'))
+        )
+        
+        links = driver.find_elements(By.CSS_SELECTOR, 'a[href^="https://newsinfo.inquirer.net/"]')
+        page_links = [link.get_attribute('href') for link in links if 'newsinfo.inquirer.net' in link.get_attribute('href')]
+        article_links.extend(page_links)
+    
+    return list(set(article_links))
+
+def get_article_text(url):
+    driver.get(url)
+    
+    # Wait for the content to load
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, 'art_body_wrap'))
+    )
+    
+    title = driver.title
+    paragraphs = driver.find_elements(By.CSS_SELECTOR, '#art_body_wrap #article_content p')
+    article_text = '\n'.join([para.text for para in paragraphs])
+    
+    author = None  # Implement logic to extract author if available
+    publication_date = None  # Implement logic to extract publication date if available
+    country = "Philippines"  # Assuming all articles are from the Philippines
+    
+    return {
+        "title": title,
+        "author": author,
+        "publication_date": publication_date,
+        "url": url,
+        "full_text": article_text,
+        "country": country
+    }
+
+def save_article_data(article_data):
+    political_news = PoliticalNews(
+        title=article_data['title'],
+        author=article_data['author'],
+        publication_date=article_data['publication_date'],
+        source="Inquirer",  # Assuming source is Inquirer
+        url=article_data['url'],
+        full_text=article_data['full_text'],
+        country=article_data['country']
+    )
+    political_news.save()
+
+def scrape_and_save_articles(target_urls):
+    article_links = get_article_links(target_urls)
+    for url in article_links:
+        try:
+            article_data = get_article_text(url)
+            save_article_data(article_data)
+            print(f"Successfully scraped and saved: {url}")
+        except Exception as e:
+            print(f"Error scraping {url}: {e}")
+
+# # Example usage
+# base_url = "https://newsinfo.inquirer.net/category/inquirer-headlines/nation"
+# scrape_and_save_articles(base_url)
+
+# # Clean up
+# driver.quit()
+
+
+
+
+
+
 
 
 
