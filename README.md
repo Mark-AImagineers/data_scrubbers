@@ -49,7 +49,9 @@ Future enhancements and planned features include:
 # Version History
 
 ## V0.2.0
-- started working on the Political News Scrub
+- started working on the Political News Scrub - completed
+- add check before saving political data to DB - unique entries only
+- remove 3rd party cookies warning
 
 ## V0.1.2
 - added check before saving weather data to DB - Unique entries only

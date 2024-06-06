@@ -6,24 +6,34 @@ import requests
 from django.contrib import messages
 from django.shortcuts import render
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from django.core.exceptions import ObjectDoesNotExist
 
 #headless mode
 chrome_options = Options()
+chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--remote-debugging-port=9222")
+chrome_options.add_argument("--disable-extensions")
+chrome_options.add_argument("--disable-popup-blocking")
+chrome_options.add_argument("--disable-notifications")
+chrome_options.add_argument("--disable-infobars")
+chrome_options.add_argument("--disable-logging")
+chrome_options.add_argument("--log-level=3")
+chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+chrome_options.add_argument("--disable-third-party-cookies")
 
-service = ChromeService(executable_path='d:/codes/chromedriver-win32/chromedriver.exe')
+service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=chrome_options)
-
-
 
 
 ## FUNCTIONS
@@ -42,7 +52,6 @@ def build_api_url(lat, lon, date1, date2, api_key):
     else:
         api_url = f"{base_url}{location}{startdate}{enddate}{query_params}&key={api_key}"
     return api_url
-
 
 
 
@@ -158,8 +167,17 @@ def politics_scrubber(request):
             target_urls = [f"https://newsinfo.inquirer.net/category/inquirer-headlines/nation/page/{page}/"
                            for page in range(start_page, end_page + 1)]
             
-            scrape_and_save_articles(target_urls)
+            print(f"Scraping...{target_urls}")
+            
+            try:
+                scrape_and_save_articles(target_urls)
+            except Exception as e:
+                print(f" error - {e}")
+            finally:
+                driver.close()
+                driver.quit()
 
+        print(f"Completed all scrapping activities.")
         context = {
             'message': f'Successfully scraped articles from {len(target_urls)} pages.'
         }
@@ -209,16 +227,21 @@ def get_article_text(url):
     }
 
 def save_article_data(article_data):
-    political_news = PoliticalNews(
-        title=article_data['title'],
-        author=article_data['author'],
-        publication_date=article_data['publication_date'],
-        source="Inquirer",  # Assuming source is Inquirer
-        url=article_data['url'],
-        full_text=article_data['full_text'],
-        country=article_data['country']
-    )
-    political_news.save()
+    try:
+        existing_article = PoliticalNews.objects.get(url=article_data['url'])
+        print("Article already exists. Skipping...")
+    except ObjectDoesNotExist:
+        political_news = PoliticalNews(
+            title = article_data['title'],
+            author = article_data['author'],
+            publication_date = article_data['publication_date'],
+            source = "Inquirer",
+            url = article_data['url'],
+            full_text = article_data['full_text'],
+            country = "Philippines"
+        )
+        political_news.save()
+        print(f"Successfully saved: {article_data['url']}")
 
 def scrape_and_save_articles(target_urls):
     article_links = get_article_links(target_urls)

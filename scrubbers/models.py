@@ -56,7 +56,7 @@ class PoliticalNews(models.Model):
     country = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.title}"
+        return f"{self.country} - {self.title}"
     
 class PolNews_Metrics(models.Model):
     political_news = models.ForeignKey(PoliticalNews, on_delete=models.CASCADE)
@@ -70,3 +70,4 @@ class PolNews_Metrics(models.Model):
 
     def __str__(self):
         return f"{self.political_news.title} by {self.political_news.author} on {self.political_news.publication_date.strftime('%Y-%m-%d %H:%M:%S')}"
+
