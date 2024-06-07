@@ -11,9 +11,16 @@
     </div>
     <br>
     <div class="mx-3">
-        <form method="post">
+        <form method="post" autocomplete="off">
             {% csrf_token %}
-            <div class="mb-3"><h2>Inquirer.Net Scrubber</h2></div>
+            <div class="mb-3"><h2>Scrubbers</h2></div>
+            <div class="form-group">
+                <label for="scraper_type" class="mt-2">Scraper Type: </label>
+                <select class="form-control" name="scraper_type" id="scraper_type">
+                    <option value="inquirer">Inquirer.net</option>
+                    <option value="pna">Philippines News Agency</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label class="mt-2" for="page_num1">Starting Page:</label>
                 <input class="form-control" type="page_num1" name="page_num1" id="page_num1">
@@ -24,20 +31,5 @@
             </div>
             <button class="my-4 btn btn-primary" type="submit">Submit</button>
         </form>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3"><h2>Philippines News Agency</h2></div>
-            <div class="form-group">
-                <label class="mt-2" for="page_num1a">Starting Page:</label>
-                <input class="form-control" type="page_num1a" name="page_num1a" id="page_num1a">
-            </div>
-            <div class="form-group">
-                <label class="mt-2" for="page_num2a">Ending Page:</label>
-                <input class="form-control" type="page_num2a" name="page_num2a" id="page_num2a">
-            </div>
-            <button class="my-4 btn btn-primary" type="submit">Submit</button>
-        </form>
-    </div>
-    
 
 {% include 'shared/footer.html' %}

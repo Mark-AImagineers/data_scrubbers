@@ -237,20 +237,47 @@ def delete_entry(request, regional_id):
 
 def politics_scrubber(request):
     if request.method == 'POST':
-        scraper_type = request.POST.get('scraper_type', 'Inquirer')
+        scraper_type = request.POST.get('scraper_type', 'inquirer')
 
-        if scraper_type == 'Inquirer':
+        print(scraper_type)
+        if scraper_type == 'inquirer':
             scraper = InquirerScraper()
-        elif scraper_type == 'PNA':
+
+            start_page = request.POST.get('page_num1', '')
+            end_page = request.POST.get('page_num2','')
+
+            if not start_page:
+                target_urls = ["https://newsinfo.inquirer.net/category/inquirer-headlines/nation"]
+            else:
+                start_page = int(start_page) if start_page else 1
+                end_page = int(end_page) if end_page else start_page
+                target_urls = [f"https://newsinfo.inquirer.net/category/inquirer-headlines/nation/page/1/"
+                            for page in range(start_page, end_page+1)]
+            
+            try:
+                print(f"Scraping.. {target_urls}")
+                scraper.scrape(target_urls)
+            except Exception as e:
+                print(f"Error during scraping: {e}")
+            finally:
+                scraper.close_driver()
+            
+            print(f"Completed all scraping activites")
+            context = {
+                'message': f"Successfully scraped {len(target_urls)} articles from Inquirer."
+            }
+            return render(request, 'political_scrubber.html', context)
+
+        elif scraper_type == 'pna':
             scraper = PNAScraper()
         else:
             return JsonResponse({'error': 'Invalid scraper type.'}, status=400)
         
-        start_page = request.POST.get('page_num1', '')
-        end_page = request.POST.get('page_num2','')
+    else:
+        return render(request, 'political_scrubber.html')
 
-        if not start_page:
-            target_urls = ["https:/"]
+
+
 
 
 
