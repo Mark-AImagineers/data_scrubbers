@@ -13,7 +13,7 @@ class Region(models.Model):
 class WeatherData(models.Model):
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
     datetime = models.DateTimeField()
-    temp = models.FloatField()
+    temp = models.FloatField(null=True, blank=True)
     feels_like = models.FloatField(null=True, blank=True)
     humidity = models.IntegerField(null=True, blank=True)
     dew_point = models.FloatField(null=True, blank=True)
@@ -40,7 +40,7 @@ class WeatherData(models.Model):
 class HourlyTemperature(models.Model):
     weather_data = models.ForeignKey(WeatherData, on_delete=models.CASCADE)
     hour = models.IntegerField()
-    temperature = models.FloatField()
+    temperature = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.temperature}°C at {self.hour}:00 on {self.weather_data.datetime.strftime('%Y-%m-%d')}"
