@@ -67,10 +67,12 @@ Future enhancements and planned features include:
 
 
 ## Pipeline
+- Scraping author, publication date
 - Add Asynchronous operations to code - Celery
 - Add scheduled run for Weather Scrubbers
 - Create Auto Backup of Weather Scrubbers data
-
+- need to improve query time
+- implement a logger system
 
 
 

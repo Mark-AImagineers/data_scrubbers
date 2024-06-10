@@ -13,6 +13,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from django.core.exceptions import ObjectDoesNotExist
+from bs4 import BeautifulSoup
+import requests
 
 ## FUNCTIONS
 
@@ -125,19 +127,63 @@ class InquirerScraper(BaseScraper):
 
 class PNAScraper(BaseScraper):
     def get_article_links(self, target_urls):
-        # PNA-Specific logic here - BS4
-        pass
+        article_links = []
+        for url in target_urls:
+            self.driver.get(url)
+            soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+            articles = soup.find_all('div', class_='article-item')
+            for article in articles:
+                link = article.find('a')
+                if link and 'href' in link.attrs:
+                    article_links.append(link['href'])
+        return list(set(article_links))
 
     def get_article_text(self, url):
-        # PNA-Specific logic here - BS4
-        pass
+        self.driver.get(url)
+        soup = BeautifulSoup(self.driver.page_source, 'html.parser')
 
+        title = soup.title.text.strip() if soup.title else 'No title found'
+
+        content = soup.find('div', class_='article_content')
+        paragraphs = content.find_all('p') if content else []
+        article_text = ' '.join(p.text for p in paragraphs if p.text).strip()
+
+        author = None  # Implement logic at a later stage"
+        publication_date = None  # Implement logic at a later stage"
+        country = "Philippines"
+
+        return {
+            "title": title,
+            "author": author,
+            "publication_date": publication_date,
+            "url": url,
+            "full_text": article_text,
+            "source": "Inquirer",
+            "country": country
+        }
     def scrape(self, target_urls):
         links = self.get_article_links(target_urls)
         for url in links:
             article_data = self.get_article_text(url)
             self.save_article_data(article_data)
 
+def get_target_urls(base_url, start_page, end_page, page_param_format):
+    if not start_page:
+        return [base_url]
+    start_page = int(start_page) if start_page else 1
+    end_page = int(end_page) if end_page else start_page
+    return [base_url + page_param_format.format(page=page) for page in range(start_page, end_page + 1)]
+
+def scrape_articles(scraper, target_urls):
+    try:
+        print(f"Scraping... {target_urls}")
+        scraper.scrape(target_urls)
+        return True, f"Successfully scraped {len(target_urls)} articles."
+    except Exception as e:
+        print(f"Error during scraping: {e}")
+        return False, str(e)
+    finally:
+        scraper.close_driver()
 
 ## VIEWS
 
@@ -238,50 +284,24 @@ def delete_entry(request, regional_id):
 def politics_scrubber(request):
     if request.method == 'POST':
         scraper_type = request.POST.get('scraper_type', 'inquirer')
+        start_page = request.POST.get('page_num1', '')
+        end_page = request.POST.get('page_num2','')
 
-        print(scraper_type)
-        if scraper_type == 'inquirer':
-            scraper = InquirerScraper()
+        scraper_classes = {
+            'inquirer': (InquirerScraper, "https://newsinfo.inquirer.net/category/inquirer-headlines/nation/page/{page}/"),
+            'pna': (PNAScraper, "https://www.pna.gov.ph/categories/national?p={page}")
+        }
 
-            start_page = request.POST.get('page_num1', '')
-            end_page = request.POST.get('page_num2','')
-
-            if not start_page:
-                target_urls = ["https://newsinfo.inquirer.net/category/inquirer-headlines/nation"]
-            else:
-                start_page = int(start_page) if start_page else 1
-                end_page = int(end_page) if end_page else start_page
-                target_urls = [f"https://newsinfo.inquirer.net/category/inquirer-headlines/nation/page/1/"
-                            for page in range(start_page, end_page+1)]
-            
-            try:
-                print(f"Scraping.. {target_urls}")
-                scraper.scrape(target_urls)
-            except Exception as e:
-                print(f"Error during scraping: {e}")
-            finally:
-                scraper.close_driver()
-            
-            print(f"Completed all scraping activites")
-            context = {
-                'message': f"Successfully scraped {len(target_urls)} articles from Inquirer."
-            }
+        if scraper_type in scraper_classes:
+            scraper_class, url_pattern = scraper_classes[scraper_type]
+            scraper = scraper_class()
+            print(f"scraper used: {scraper}")
+            target_urls = get_target_urls(url_pattern.split('{')[0], start_page, end_page, '{' + url_pattern.split('{')[1])
+            success, message = scrape_articles(scraper, target_urls)
+            context = {'message': message if success else f"Failed: {message}"}
+            print("completed all scrubbing activities.")
             return render(request, 'political_scrubber.html', context)
-
-        elif scraper_type == 'pna':
-            scraper = PNAScraper()
         else:
             return JsonResponse({'error': 'Invalid scraper type.'}, status=400)
-        
     else:
         return render(request, 'political_scrubber.html')
-
-
-
-
-
-
-
-
-
-
