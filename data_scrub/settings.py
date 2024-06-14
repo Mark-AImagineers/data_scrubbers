@@ -18,18 +18,9 @@ from django.conf import settings
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-kw=w!&(a+r6g)mh0#0$6@kbv)g#x#5m#kjqgewn&o(p%kqhh5$'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+SECRET_KEY = os.environ.get("SECRET_KEY")
+DEBUG = os.environ.get("DEBUG") if os.environ.get("DEBUG") else True
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 # Application definition
 
@@ -87,7 +78,6 @@ if ON_HEROKU:
         'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
     }
     DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
-
 else:
     DATABASES = {
         'default': {
@@ -95,11 +85,13 @@ else:
             'NAME': 'datascrub',
             'USER': 'postgres',
             'PASSWORD': '0902',
-            'HOST': 'localhost',
+            'HOST': 'db',
             'PORT': '5432',
+            'OPTIONS': {
+                'sslmode': 'disable',
+            },
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

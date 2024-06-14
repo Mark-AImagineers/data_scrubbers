@@ -1,0 +1,30 @@
+services:
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=0902
+      - POSTGRES_DB=datascrub
+
+  django:
+    container_name: django
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app/
+    ports:
+     - 8000:8000
+    depends_on:
+      - db
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=MetalGear0302
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
+
+volumes:
+  postgres_data:
