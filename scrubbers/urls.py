@@ -7,4 +7,5 @@ urlpatterns = [
     path('manage_regions/', manage_regions, name='manage_regions'),
     path('delete/<int:regional_id>/',delete_entry, name='delete_entry'),
     path('political/', politics_scrubber, name='politics_scrubber'),
+    path('test/', test_environment, name='test_environment'),
 ]
