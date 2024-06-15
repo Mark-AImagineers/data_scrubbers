@@ -136,8 +136,8 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR,'static'),)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis:6379/0")
 
 logs_dir = os.path.join(BASE_DIR, 'logs')
 if not os.path.exists(logs_dir):

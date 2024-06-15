@@ -1,6 +1,7 @@
 scrubbers/config.py
 logs/
 test.py
+commands.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

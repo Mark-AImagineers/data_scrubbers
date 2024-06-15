@@ -11,6 +11,7 @@ import requests as re
 import logging
 from django.contrib import messages
 from .tasks import *
+from celery.result import AsyncResult
 
 
 logger = logging.getLogger('data_scrub_log')
@@ -32,10 +33,25 @@ def weather_scrubber(request):
         startdate = request.POST['date1']
         enddate = request.POST['date2']
         logger.info(f"Data recieived: {startdate} to {enddate}!")
-        scrub_weather_data.delay(startdate, enddate)
-        messages.info(request, f"Weather data scrubbing started for {startdate} to {enddate}!")
+        async_task = scrub_weather_data.delay(startdate, enddate)
+        task_id = async_task.id
+        messages.info(request, f"Weather scrubber task {task_id} started")
+        logger.info(f"Weather scrubber task {task_id} started")
+        request.session['task_id'] = task_id
         return redirect('weather_scrubber')
     else:
+        task_id = request.session.get('task_id', None)
+
+        if task_id:
+            result = AsyncResult(task_id)
+            if result.ready():
+                messages.info(request, f"Weather scrubber task {task_id} completed!")
+                del request.session['task_id']
+            else:
+                messages.info(request, f"Weather scrubber task {task_id} is still running")
+        else:
+            messages.info(request, f"No weather scrubber task is running")
+        
         return render(request, 'weather_scrubber.html')
                             
 def manage_regions(request):

@@ -4,6 +4,7 @@ import requests as re
 import logging
 from .models import *
 from .config import api_key
+from django.db import transaction
 
 logger = logging.getLogger('data_scrub_log')
 
@@ -22,8 +23,8 @@ def build_api_url(lat, lon, date1, date2, api_key):
         api_url = f"{base_url}{location}{startdate}{enddate}{query_params}&key={api_key}"
     return api_url
 
-@shared_task
-def scrub_weather_data(startdate, enddate):
+@shared_task(bind=True, max_retries=3)
+def scrub_weather_data(self, startdate, enddate):
     regions = Region.objects.all()
     API = api_key
     for region in regions:
@@ -33,53 +34,62 @@ def scrub_weather_data(startdate, enddate):
         if response.status_code == 200:
             data = response.json()
             logger.info(f"Length of data received: {len(data)}")
+            
             for day in data.get('days', []):
+                try:
+                    with transaction.atomic():
+                        exists = WeatherData.objects.filter(
+                        region=region, 
+                        datetime=day['datetime']
+                        ).exists()
+                    
+                        if not exists:
+                            weather_entry = WeatherData(
+                                region=region,
+                                datetime=day['datetime'],
+                                temp=day['temp'],
+                                feels_like=day['feelslike'],
+                                humidity=day['humidity'],
+                                dew_point=day['dew'],
+                                precipitation=day['precip'],
+                                precipitation_prob=day['precipprob'],
+                                snow=day['snow'],
+                                snow_depth=day['snowdepth'],
+                                wind_gust=day['windgust'],
+                                wind_speed=day['windspeed'],
+                                wind_direction=day['winddir'],
+                                pressure=day['pressure'],
+                                visibility=day['visibility'],
+                                cloud_cover=day['cloudcover'],
+                                solar_radiation=day['solarradiation'],
+                                solar_energy=day['solarenergy'],
+                                uv_index=day['uvindex'],
+                                severe_risk=day.get('severerisk', 0),
+                                conditions=day['conditions'],
+                                icon=day['icon'],
+                            )
+                            weather_entry.save()
 
-                exists = WeatherData.objects.filter(
-                    region=region, 
-                    datetime=day['datetime']
-                    ).exists()
-                
-                if not exists:
-                    weather_entry = WeatherData(
-                        region=region,
-                        datetime=day['datetime'],
-                        temp=day['temp'],
-                        feels_like=day['feelslike'],
-                        humidity=day['humidity'],
-                        dew_point=day['dew'],
-                        precipitation=day['precip'],
-                        precipitation_prob=day['precipprob'],
-                        snow=day['snow'],
-                        snow_depth=day['snowdepth'],
-                        wind_gust=day['windgust'],
-                        wind_speed=day['windspeed'],
-                        wind_direction=day['winddir'],
-                        pressure=day['pressure'],
-                        visibility=day['visibility'],
-                        cloud_cover=day['cloudcover'],
-                        solar_radiation=day['solarradiation'],
-                        solar_energy=day['solarenergy'],
-                        uv_index=day['uvindex'],
-                        severe_risk=day.get('severerisk', 0),
-                        conditions=day['conditions'],
-                        icon=day['icon'],
-                    )
-                    weather_entry.save()
-                    logger.info(f"Weather data for {region.name} on {day['datetime']} successfully scrubbed!")
+                            logger.info(f"Weather data for {region.name} on {day['datetime']} successfully scrubbed!")
 
-                    for hour in day.get('hours', []):
-                        HourlyTemperature.objects.create(
-                            weather_data=weather_entry,
-                            hour=int(hour['datetime'].split(':')[0]),  # Extracting the hour part
-                            temperature=hour['temp'],
-                        )
-                        logger.info(f"Hourly temperature for {region.name} on {day['datetime']} successfully scrubbed!")
-                    else:
-                        logger.info(f"Weather data for {region.name} on {day['datetime']} already exists")
+                            for hour in day.get('hours', []):
+                                HourlyTemperature.objects.create(
+                                    weather_data=weather_entry,
+                                    hour=int(hour['datetime'].split(':')[0]),  # Extracting the hour part
+                                    temperature=hour['temp'],
+                                )
+                                logger.info(f"Hourly temperature for {region.name} on {day['datetime']} successfully scrubbed!")
+                        else:
+                            logger.info(f"Weather data for {region.name} on {day['datetime']} already exists")    
+
+                except Exception as exc:
+                    logger.error(f"Error: {exc}")
+                    self.retry(exc=exc)
+
         else:
             logger.error(f"Error fetching data for {region.name} with status code {response.status_code}.")
     logger.info(f"Completed all weather data scrubbing!")
+    return True
 
 @shared_task
 def add(x,y):
