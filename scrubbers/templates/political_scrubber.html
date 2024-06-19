@@ -11,25 +11,28 @@
     </div>
     <br>
     <div class="mx-3">
-        <form method="post" autocomplete="off">
+        {% block content %}
+        
+        <form method="post" autocomplete="off" class="mx-3">
             {% csrf_token %}
-            <div class="mb-3"><h2>Scrubbers</h2></div>
-            <div class="form-group">
-                <label for="scraper_type" class="mt-2">Scraper Type: </label>
-                <select class="form-control" name="scraper_type" id="scraper_type">
-                    <option value="inquirer">Inquirer.net</option>
-                    <option value="pna">Philippines News Agency</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="mt-2" for="page_num1">Starting Page:</label>
-                <input class="form-control" type="page_num1" name="page_num1" id="page_num1">
-            </div>
-            <div class="form-group">
-                <label class="mt-2" for="page_num2">Ending Page:</label>
-                <input class="form-control" type="page_num2" name="page_num2" id="page_num2">
-            </div>
-            <button class="my-4 btn btn-primary" type="submit">Submit</button>
+            {% for field in form %}
+                <div class="form-group my-3">
+                    {{ field.label_tag }}  <!-- Renders the label -->
+                    {{ field }}  <!-- Renders the form field -->
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <button class="my-4 btn btn-primary" type="submit">Start Scraper</button>
         </form>
+    </div>
 
+        
 {% include 'shared/footer.html' %}
+{% endblock %}

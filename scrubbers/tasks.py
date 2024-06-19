@@ -5,8 +5,8 @@ import logging
 from .models import *
 from .config import api_key
 from django.db import transaction
-import scrapy
-from datetime import datetime
+import subprocess
+import os
 
 logger = logging.getLogger('data_scrub_log')
 
@@ -74,15 +74,19 @@ def scrub_weather_data(self, startdate, enddate):
 
                             logger.info(f"Weather data for {region.name} on {day['datetime']} successfully scrubbed!")
 
+                            count_hourly_temp_entries = 0
+
                             for hour in day.get('hours', []):
                                 HourlyTemperature.objects.create(
                                     weather_data=weather_entry,
                                     hour=int(hour['datetime'].split(':')[0]),  # Extracting the hour part
                                     temperature=hour['temp'],
                                 )
-                                logger.info(f"Hourly temperature for {region.name} on {day['datetime']} successfully scrubbed!")
+                                count_hourly_temp_entries += 1
+                            
+                            logger.info(f"Total hourly temperature entries created: {count_hourly_temp_entries}")
                         else:
-                            logger.info(f"Weather data for {region.name} on {day['datetime']} already exists")    
+                            logger.info(f"Weather data for {region.name} on {day['datetime']} already exists... Skipping...")
 
                 except Exception as exc:
                     logger.error(f"Error: {exc}")
@@ -92,3 +96,38 @@ def scrub_weather_data(self, startdate, enddate):
             logger.error(f"Error fetching data for {region.name} with status code {response.status_code}.")
     logger.info(f"Completed all weather data scrubbing!")
     return True
+@shared_task
+def run_scrapy_spider(scraper_type, start_page, end_page):
+    current_directory = os.getcwd()
+    project_path = os.path.join(current_directory, 'articlescraper')
+
+    try:
+        os.chdir(project_path)
+        logger.info(f"Changed directory to {project_path}")
+        print(f"Changed directory to {project_path}")
+    except FileNotFoundError:
+        logger.error(f"Failed to change directory to {project_path}. Directory not found.")
+        print(f"Failed to change directory to {project_path}. Directory not found.")
+        return "Directory not found."
+
+    command = f'scrapy crawl {scraper_type} -a start_page={start_page} -a end_page={end_page}'
+
+    process = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    stdout, stderr = process.communicate()
+
+    if process.returncode == 0:
+        logger.info(f"Scrapy spider {scraper_type} completed successfully!")
+        print(f"Scrapy spider {scraper_type} completed successfully!")
+        return stdout.decode()
+    else:
+        print(f"Error running scrapy spider {scraper_type}")
+        logger.error(f"Error running scrapy spider {scraper_type}")
+        return stderr.decode()
+    
+

@@ -12,6 +12,9 @@ import logging
 from django.contrib import messages
 from .tasks import *
 from celery.result import AsyncResult
+from .forms import ScraperForm
+from .tasks import run_scrapy_spider
+from django.contrib import messages
 
 
 logger = logging.getLogger('data_scrub_log')
@@ -52,6 +55,7 @@ def weather_scrubber(request):
                 messages.info(request, f"Weather scrubber task {task_id} is still running")
         else:
             messages.info(request, f"No weather scrubber task is running")
+            request.session['task_id'] = None
         
         return render(request, 'weather_scrubber.html')
                             
@@ -82,5 +86,20 @@ def delete_entry(request, regional_id):
     return redirect('manage_regions')
 
 def politics_scrubber(request):
-    return render(request, 'political_scrubber.html')
+    form = ScraperForm()
+    if request.method == 'POST':
+        form = ScraperForm(request.POST)
+        if form.is_valid():
+            scraper_type = form.cleaned_data['scraper_type']
+            start_page = form.cleaned_data['start_page'] 
+            end_page = form.cleaned_data['end_page']
+
+            run_scrapy_spider.delay(scraper_type, start_page, end_page)
+            messages.success(request, "Scraper has been started!")
+            return redirect('politics_scrubber')
+        
+        else:
+            return render(request, 'political_scrubber.html', {'form': form})
+        
+    return render(request, 'political_scrubber.html', {'form': form})
 

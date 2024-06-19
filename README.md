@@ -48,8 +48,13 @@ Future enhancements and planned features include:
 
 # Version History
 
-## V0.3.1
+## V0.3.2
+- attempting to connect celery-django and scrapy
 
+## V0.3.1
+- Partially able to run scrapy logic for inquirer.net Nation landing page
+- need to create a solution where im able to add page and start the scraping logic from there
+- from here we need to send this to celery for asynchonous handling and connect it through django - will start a new branch for this dev.
 
 
 ## V0.3.0

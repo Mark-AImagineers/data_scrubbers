@@ -5,17 +5,21 @@ import json
 class InquirerspiderSpider(scrapy.Spider):
     name = "inquirerspider"
     allowed_domains = ["newsinfo.inquirer.net"]
-    start_urls = ["https://newsinfo.inquirer.net/category/inquirer-headlines/nation"]
+
+    def __init__(self, start_page=1, end_page=1, *args, **kwargs):
+        super(InquirerspiderSpider, self).__init__(*args, **kwargs)
+        self.start_page = int(start_page)
+        self.end_page = int(end_page)
+        self.start_urls = [
+            f"https://newsinfo.inquirer.net/category/inquirer-headlines/nation/page/{page}"
+            for page in range(self.start_page, self.end_page + 1)
+        ]
 
     def parse(self, response):
         articles = response.css('div#ch-ls-head')
         for article in articles:
-
             author_raw = article.css('div#ch-postdate span:last-child::text').get()
-            if author_raw and 'BY:' in author_raw:
-                author = author_raw.strip('BY: ').strip()
-            else:
-                author =  'Inquirer Philippines'
+            author = author_raw.strip('BY: ').strip() if author_raw and 'BY:' in author_raw else 'Inquirer Philippines'
 
             item = {
                 'title': article.css('div#ch-cat:contains("Headlines") + h2 a::text').get(),
@@ -28,7 +32,7 @@ class InquirerspiderSpider(scrapy.Spider):
 
             if item['url']:
                 yield response.follow(item['url'], self.parse_article, meta={'item': item})
-            
+
     def parse_article(self, response):
         item = response.meta['item']
         script = response.xpath('//script[@type="application/ld+json"]/text()').get()
@@ -41,6 +45,8 @@ class InquirerspiderSpider(scrapy.Spider):
                 self.logger.error(f"JSON decode error at {response.url}: {str(e)}")
                 item['full_text'] = 'Error decoding JSON'
             yield item
+
+
 
 
 # response.css('div#ch-ls-head div#ch-cat:contains("Headlines") + h2 a::attr(href)').getall() -- this will get all the url links (headlines only not including trending)
