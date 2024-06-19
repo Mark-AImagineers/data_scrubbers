@@ -99,12 +99,18 @@ def scrub_weather_data(self, startdate, enddate):
 @shared_task
 def run_scrapy_spider(scraper_type, start_page, end_page):
     current_directory = os.getcwd()
-    project_path = os.path.join(current_directory, 'articlescraper')
+    logger.info(f"Current directory is {current_directory}")
+    project_path = os.path.join('/usr/src/app/', 'articlescraper')
+    logger.info(f"Project path is {project_path}")
 
     try:
-        os.chdir(project_path)
-        logger.info(f"Changed directory to {project_path}")
-        print(f"Changed directory to {project_path}")
+        if current_directory!= project_path:
+            os.chdir(project_path)
+            logger.info(f"Changed directory to {project_path}")
+            print(f"Changed directory to {project_path}")
+        else:
+            logger.info(f"Current directory is {current_directory}")
+            print("No changes in directory")
     except FileNotFoundError:
         logger.error(f"Failed to change directory to {project_path}. Directory not found.")
         print(f"Failed to change directory to {project_path}. Directory not found.")

@@ -1,5 +1,8 @@
 import scrapy
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class InquirerspiderSpider(scrapy.Spider):
@@ -14,6 +17,7 @@ class InquirerspiderSpider(scrapy.Spider):
             f"https://newsinfo.inquirer.net/category/inquirer-headlines/nation/page/{page}"
             for page in range(self.start_page, self.end_page + 1)
         ]
+        logger.info(f"Scraping from {self.start_page} to {self.end_page} of Inquirer.net")
 
     def parse(self, response):
         articles = response.css('div#ch-ls-head')

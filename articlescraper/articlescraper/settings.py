@@ -12,6 +12,8 @@ BOT_NAME = "articlescraper"
 SPIDER_MODULES = ["articlescraper.spiders"]
 NEWSPIDER_MODULE = "articlescraper.spiders"
 
+LOG_LEVEL = 'INFO'
+
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "articlescraper (+http://www.yourdomain.com)"

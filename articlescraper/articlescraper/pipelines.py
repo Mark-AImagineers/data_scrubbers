@@ -9,6 +9,9 @@ from itemadapter import ItemAdapter
 import psycopg2
 import os
 import dj_database_url
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PostgresPipeline(object):
     def open_spider(self, spider):
@@ -42,9 +45,20 @@ class PostgresPipeline(object):
 
     def process_item(self, item, spider):
         self.cur.execute(
+            "SELECT url FROM scrubbers_politicalnews WHERE url = %s",
+            (item['url'],)
+        )
+        result = self.cur.fetchone()
+        if result:
+            logger.info(f"Duplicate item found: {item['url']} skipping...")
+            return item  # Skip the item if it already exists
+
+        # If not found, insert the new item
+        self.cur.execute(
             "INSERT INTO scrubbers_politicalnews (title, url, publication_date, author, full_text, country, source) VALUES (%s, %s, %s, %s, %s, %s, %s)",
             (item['title'], item['url'], item['date'], item['author'], item['full_text'], item['country'], item['source'])
         )
+        logger.info(f"Item added to database: {item['url']}")
         self.connection.commit()
         return item
 
