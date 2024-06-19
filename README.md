@@ -48,6 +48,15 @@ Future enhancements and planned features include:
 
 # Version History
 
+## V0.3.1
+
+
+
+## V0.3.0
+- Implemented Dockers (Django, Redis, Celery)
+- Weather Data Scrubbing working in Celery
+- Implemenent Logging System
+
 ## V0.2.0
 - started working on the Political News Scrub - completed
 - add check before saving political data to DB - unique entries only
@@ -68,11 +77,12 @@ Future enhancements and planned features include:
 
 ## Pipeline
 - Scraping author, publication date
-- Add Asynchronous operations to code - Celery
 - Add scheduled run for Weather Scrubbers
 - Create Auto Backup of Weather Scrubbers data
-- need to improve query time
-- implement a logger system
+- Add check - unable to put weather data end date < start date
+- need to improve query time (SQL Cache?)
+- improve notifications on celery tasks (get best practice)
+- improve logger - lessen verbose
 
 
 

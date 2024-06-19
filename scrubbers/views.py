@@ -22,7 +22,8 @@ logger.info(f"-----Started Django Server-----")
 ## FUNCTIONS
 
 ## VIEWS
-
+def test_environment(request):
+    return render(request, 'test_environment.html')
 def index(request):
     return render(request, 'index.html')
 
@@ -83,7 +84,3 @@ def delete_entry(request, regional_id):
 def politics_scrubber(request):
     return render(request, 'political_scrubber.html')
 
-def test_environment(request):
-    result = add.delay(4,5)
-    logger.info(f"Result = {result.get()}")
-    return render(request, 'test_environment.html')

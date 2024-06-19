@@ -5,6 +5,8 @@ import logging
 from .models import *
 from .config import api_key
 from django.db import transaction
+import scrapy
+from datetime import datetime
 
 logger = logging.getLogger('data_scrub_log')
 
@@ -90,9 +92,3 @@ def scrub_weather_data(self, startdate, enddate):
             logger.error(f"Error fetching data for {region.name} with status code {response.status_code}.")
     logger.info(f"Completed all weather data scrubbing!")
     return True
-
-@shared_task
-def add(x,y):
-    result = x + y
-    logger.info(f"Adding {x} + {y} = {result}")
-    return result

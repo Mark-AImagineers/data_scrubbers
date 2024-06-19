@@ -23,6 +23,7 @@ services:
   
   redis:
     image: redis:7.0.15-alpine
+    restart: always
 
   django:
     container_name: django
