@@ -4,21 +4,20 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-class BusinessinqSpider(scrapy.Spider):
-    name = "businessinq"
-    allowed_domains = ["business.inquirer.net"]
+class TechnologyinqSpider(scrapy.Spider):
+    name = "technologyinq"
+    allowed_domains = ["technology.inquirer.net"]
 
     def __init__(self, start_page=1, end_page=1, *args, **kwargs):
-        super(BusinessinqSpider, self).__init__(*args, **kwargs)
+        super(TechnologyinqSpider, self).__init__(*args, **kwargs)
         self.start_page = int(start_page)
         self.end_page = int(end_page)
         self.start_urls = [
-            f"https://business.inquirer.net/category/business-headlines/page/{page}"
+            f"https://technology.inquirer.net/category/headlines/page/{page}"
             for page in range(self.start_page, self.end_page + 1)
         ]
-        logger.info(f"Scraping from {self.start_page} to {self.end_page} of Inquirer.net")
-
+        logger.info(f"Scraping from {self.start_page} to {self.end_page} of Technology Inquirer.net")
+    
     def parse(self, response):
         articles = response.css('div#ch-ls-head')
         for article in articles:
@@ -41,11 +40,11 @@ class BusinessinqSpider(scrapy.Spider):
         item = response.meta['item']
         script = response.xpath('//script[@type="application/ld+json"]/text()').get()
         if script:
-            script_clean = script.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+            script_clean = script.replace('\n', '').replace('\r', '').replace('\t', '')
             try:
                 data = json.loads(script_clean)
                 item['full_text'] = data.get('articleBody', 'No article body found.')
-            except json.JSONDecodeError as e:
+            except json.JSONDecoderError as e:
                 self.logger.error(f"JSON decode error at {response.url}: {str(e)}")
-                item['full_text'] = 'Error decoding JSON'
-            yield item
+                item['full_text'] = 'No article body found.'
+        yield item

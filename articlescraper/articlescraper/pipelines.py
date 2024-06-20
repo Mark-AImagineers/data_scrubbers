@@ -48,6 +48,8 @@ class PostgresPipeline(object):
             table_name = "scrubbers_politicalnews"
         elif spider.name == "businessinq":
             table_name = "scrubbers_businessnews"
+        elif spider.name == "technologyinq":
+            table_name = "scrubbers_technologynews"
         
         self.cur.execute(
             f"SELECT url FROM {table_name} WHERE url = %s",

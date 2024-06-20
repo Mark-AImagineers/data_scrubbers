@@ -9,4 +9,5 @@ urlpatterns = [
     path('political/', politics_scrubber, name='politics_scrubber'),
     path('test/', test_environment, name='test_environment'),
     path('business/', business_scrubber, name='business_scrubber'),
+    path('technology/', technology_scrubber, name='technology_scrubber'),
 ]

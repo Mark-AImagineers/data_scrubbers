@@ -95,3 +95,28 @@ class BusNews_Metrics(models.Model):
 
     def __str__(self):
         return f"{self.business_news.title} by {self.business_news.author} on {self.business_news.publication_date.strftime('%Y-%m-%d %H:%M:%S')}"
+    
+class TechnologyNews(models.Model):
+    title = models.CharField(max_length=255, null=True, blank=True)
+    author = models.CharField(max_length=255, null=True, blank=True)
+    publication_date = models.DateTimeField(null=True, blank=True)
+    source = models.CharField(max_length=255, null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
+    full_text = models.TextField(null=True, blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.country} - {self.title}"
+
+class TechNews_Metrics(models.Model):
+    technology_news = models.ForeignKey(TechnologyNews, on_delete=models.CASCADE)
+    summary = models.CharField(max_length=255, null=True, blank=True)
+    sentiment_score = models.FloatField(null=True, blank=True)
+    sentiment_classification = models.CharField(max_length=255, null=True, blank=True)
+    named_entities = models.CharField(max_length=255, null=True, blank=True)
+    key_phrases = models.TextField(null=True, blank=True)
+    engagement_metrics = models.JSONField(null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.technology_news.title} by {self.technology_news.author} on {self.technology_news.publication_date.strftime('%Y-%m-%d %H:%M:%S')}"

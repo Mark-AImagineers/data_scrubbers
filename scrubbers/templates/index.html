@@ -10,7 +10,7 @@
         <a href="{% url 'politics_scrubber' %}"><p>POLITICAL - Politics News</p></a>
         <a href="{% url 'business_scrubber' %}"><p>ECONOMIC - Business News</p></a>
         <p>SOCIAL - Marketing News</p>
-        <p>TECHNOLOGICAL - Tech News</p>
+        <a href="{% url 'technology_scrubber' %}"><p>TECHNOLOGICAL - Tech News</p></a>
         <p>LEGAL - Law and Regulations News</p>
         <p><a href={% url 'weather_scrubber' %}>ENVIRONMENTAL - Weather Info</a></p>
     </div>
@@ -20,3 +20,4 @@
     
 
 {% include 'shared/footer.html' %}
+
