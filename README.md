@@ -48,9 +48,13 @@ Future enhancements and planned features include:
 
 # Version History
 
+## V0.3.3
+- decided to skip PNA scraper for now. 403 on testing. Might need headers.
+- implementing business news with inquirer
+
 ## V0.3.2
 - successfully connect celery-django and scrapy
-- inquirerscrapy now working - need to add logs
+- inquirerscrapy now working - added basic logs - need further refinement
 
 ## V0.3.1
 - Partially able to run scrapy logic for inquirer.net Nation landing page
@@ -89,6 +93,7 @@ Future enhancements and planned features include:
 - need to improve query time (SQL Cache?)
 - improve notifications on celery tasks (get best practice)
 - improve logger - lessen verbose
+- PNA Scanner for political news (adding diversity to news sources)
 
 
 

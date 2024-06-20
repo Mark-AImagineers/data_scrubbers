@@ -44,8 +44,13 @@ class PostgresPipeline(object):
         self.connection.close()
 
     def process_item(self, item, spider):
+        if spider.name == "inquirerspider":
+            table_name = "scrubbers_politicalnews"
+        elif spider.name == "businessinq":
+            table_name = "scrubbers_businessnews"
+        
         self.cur.execute(
-            "SELECT url FROM scrubbers_politicalnews WHERE url = %s",
+            f"SELECT url FROM {table_name} WHERE url = %s",
             (item['url'],)
         )
         result = self.cur.fetchone()
@@ -55,10 +60,10 @@ class PostgresPipeline(object):
 
         # If not found, insert the new item
         self.cur.execute(
-            "INSERT INTO scrubbers_politicalnews (title, url, publication_date, author, full_text, country, source) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            f"INSERT INTO {table_name} (title, url, publication_date, author, full_text, country, source) VALUES (%s, %s, %s, %s, %s, %s, %s)",
             (item['title'], item['url'], item['date'], item['author'], item['full_text'], item['country'], item['source'])
         )
-        logger.info(f"Item added to database: {item['url']}")
+        logger.info(f"Item added to database {table_name}: {item['url']}")
         self.connection.commit()
         return item
 

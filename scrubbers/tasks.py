@@ -117,6 +117,8 @@ def run_scrapy_spider(scraper_type, start_page, end_page):
         return "Directory not found."
 
     command = f'scrapy crawl {scraper_type} -a start_page={start_page} -a end_page={end_page}'
+    print(f"Running command: {command}")
+    logger.info(f"Running command: {command}")
 
     process = subprocess.Popen(
         command,

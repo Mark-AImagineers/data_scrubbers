@@ -12,7 +12,7 @@ import logging
 from django.contrib import messages
 from .tasks import *
 from celery.result import AsyncResult
-from .forms import ScraperForm
+from .forms import ScraperForm, BusinessForm
 from .tasks import run_scrapy_spider
 from django.contrib import messages
 
@@ -103,3 +103,20 @@ def politics_scrubber(request):
         
     return render(request, 'political_scrubber.html', {'form': form})
 
+def business_scrubber(request):
+    form = BusinessForm()
+    if request.method == 'POST':
+        form = BusinessForm(request.POST)
+        if form.is_valid():
+            scraper_type = form.cleaned_data['scraper_type']
+            start_page = form.cleaned_data['start_page'] 
+            end_page = form.cleaned_data['end_page']
+
+            run_scrapy_spider.delay(scraper_type, start_page, end_page)
+            messages.success(request, "Scraper has been started!")
+            return redirect('business_scrubber')
+        
+        else:
+            return render(request, 'business_scrubber.html', {'form': form})
+    
+    return render(request, 'business_scrubber.html', {'form': form})
