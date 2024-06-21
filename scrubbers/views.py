@@ -94,14 +94,29 @@ def politics_scrubber(request):
             start_page = form.cleaned_data['start_page'] 
             end_page = form.cleaned_data['end_page']
 
-            run_scrapy_spider.delay(scraper_type, start_page, end_page)
-            messages.success(request, "Scraper has been started!")
+            async_task = run_scrapy_spider.delay(scraper_type, start_page, end_page)
+            task_id = async_task.id
+            messages.info(request, f"Scraper {scraper_type} has been started!")
+            logger.info(f"Scraper {scraper_type} has been started!")
+            request.session['task_id'] = task_id
             return redirect('politics_scrubber')
-        
         else:
             return render(request, 'political_scrubber.html', {'form': form})
+    else:
+        task_id = request.session.get('task_id', None)
+
+        if task_id:
+            result = AsyncResult(task_id)
+            if result.ready():
+                messages.info(request, f"Politics scrubber task {task_id} completed!")
+                del request.session['task_id']
+            else:
+                messages.info(request, f"Politics scrubber task {task_id} is still running!")    
+        else:
+            messages.info(request, f"No politics scrubber task is running!")
+            request.session['task_id'] = None
         
-    return render(request, 'political_scrubber.html', {'form': form})
+        return render(request, 'political_scrubber.html', {'form': form})
 
 def business_scrubber(request):
     form = BusinessForm()
@@ -112,14 +127,29 @@ def business_scrubber(request):
             start_page = form.cleaned_data['start_page'] 
             end_page = form.cleaned_data['end_page']
 
-            run_scrapy_spider.delay(scraper_type, start_page, end_page)
-            messages.success(request, "Scraper has been started!")
+            async_task = run_scrapy_spider.delay(scraper_type, start_page, end_page)
+            task_id = async_task.id
+            messages.info(request, f"Scraper {scraper_type} has been started!")
+            logger.info(f"Scraper {scraper_type} has been started!")
+            request.session['task_id'] = task_id
             return redirect('business_scrubber')
-        
         else:
             return render(request, 'business_scrubber.html', {'form': form})
-    
-    return render(request, 'business_scrubber.html', {'form': form})
+    else:
+        task_id = request.session.get('task_id', None)
+
+        if task_id:
+            result = AsyncResult(task_id)
+            if result.ready():
+                messages.info(request, f"Business scrubber task {task_id} completed!")
+                del request.session['task_id']
+            else:
+                messages.info(request, f"Business scrubber task {task_id} is still running!")    
+        else:
+            messages.info(request, f"No business scrubber task is running!")
+            request.session['task_id'] = None
+
+        return render(request, 'business_scrubber.html', {'form': form})
 
 
 def technology_scrubber(request):
@@ -131,11 +161,30 @@ def technology_scrubber(request):
             start_page = form.cleaned_data['start_page'] 
             end_page = form.cleaned_data['end_page']
 
-            run_scrapy_spider.delay(scraper_type, start_page, end_page)
-            messages.success(request, "Scraper has been started!")
+            async_task = run_scrapy_spider.delay(scraper_type, start_page, end_page)
+            task_id = async_task.id
+            messages.info(request, f"Scraper {scraper_type} has been started!")
+            logger.info(f"Scraper {scraper_type} has been started!")
+            request.session['task_id'] = task_id
             return redirect('technology_scrubber')
-        
         else:
             return render(request, 'technology_scrubber.html', {'form': form})
+    else:
+        task_id = request.session.get('task_id', None)
+
+        if task_id:
+            result = AsyncResult(task_id)
+            if result.ready():
+                messages.info(request, f"Technology scrubber task {task_id} completed!")
+                del request.session['task_id']
+            else:
+                messages.info(request, f"Technology scrubber task {task_id} is still running!")
+        else:
+            messages.info(request, f"No technology scrubber task is running!")
+            request.session['task_id'] = None
     
-    return render(request, 'technology_scrubber.html', {'form': form})
+        return render(request, 'technology_scrubber.html', {'form': form})
+
+def political_export(request):
+
+    return redirect('politics_scrubber')

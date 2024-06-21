@@ -48,8 +48,15 @@ Future enhancements and planned features include:
 
 # Version History
 
+## pending
+- create a way to backup db - maybe json files?
+- data cleansing
+- data annotation
+
 ## V0.3.4
 - implemented technology scraper with inquirer scraper
+- added messages on all scrapers
+- implemented task ids
 
 ## V0.3.3
 - decided to skip PNA scraper for now. 403 on testing. Might need headers.
@@ -57,14 +64,13 @@ Future enhancements and planned features include:
 
 ## V0.3.2
 - successfully connect celery-django and scrapy
+- add page selection to scraping logic
 - inquirerscrapy now working - added basic logs - need further refinement
 - now able to Scrape author, publication date
 
 ## V0.3.1
-- Partially able to run scrapy logic for inquirer.net Nation landing page
-- need to create a solution where im able to add page and start the scraping logic from there
-- from here we need to send this to celery for asynchonous handling and connect it through django - will start a new branch for this dev.
-
+- revised all scraping logic - use scrapy
+- working inquirer.net national scraping
 
 ## V0.3.0
 - Implemented Dockers (Django, Redis, Celery)
@@ -86,18 +92,18 @@ Future enhancements and planned features include:
 - Initialise Project
 - Started woring on a simple UI
 
-## Pending
-
 
 ## Pipeline
 - Add scheduled run for Weather Scrubbers
 - Create Auto Backup of Weather Scrubbers data
-- Add check - unable to put weather data end date < start date
 - need to improve query time (SQL Cache?)
 - improve notifications on celery tasks (get best practice)
 - improve logger - lessen verbose, add more logs for scrapy logic
 - PNA Scanner for political news (adding diversity to news sources)
 - need to clean data source - remove unreadable text
+- json to db (backup reupload)
+- dashboard
+- jupyter in a webpage
 
 
 ## NOTES

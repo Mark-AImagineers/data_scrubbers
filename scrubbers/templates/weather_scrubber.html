@@ -13,6 +13,7 @@
         <p><a href={% url 'index' %}>back</a></p>
     </div>
     <br>
+    
     <div class="card mx-3 mb-4">
         <div class="card-body">
             {% if messages %}
@@ -24,6 +25,7 @@
             {% endif %}
         </div>
     </div>
+
     <div class="mx-3">
         <form autocomplete="off" method="post">
             {% csrf_token %}
