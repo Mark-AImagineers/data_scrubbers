@@ -10,7 +10,7 @@
         <p><a href={% url 'index' %}>back</a></p>
     </div>
     <br>
-    
+
     <div class="card mx-3 mb-4">
         <div class="card-body">
             {% if messages %}
@@ -45,6 +45,10 @@
             {% endfor %}
             <button class="my-4 btn btn-primary" type="submit">Start Scraper</button>
         </form>
+
+        <div class="mx-3">
+            <a href="{% url 'export_to_csv' %}"><button class="btn btn-primary">Export to JSON</button></a>
+        </div>
     </div>
 
         

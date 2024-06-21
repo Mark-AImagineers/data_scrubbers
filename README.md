@@ -1,7 +1,7 @@
 # DATA SCRUBBERS PROJECT
 
 ## Project Overview
-This project aims to collect and scrub extensive and valuable data for future machine learning (ML) projects, with a focus on business-related cases. The project is also intended to generate revenue by selling the curated and enriched datasets.
+This project aims to collect and scrub extensive and valuable data for future machine learning (ML) projects, with a focus on business-related cases.
 
 ## Scrubbers
 The project utilizes various data scrubbers to gather information from different sources, categorized as follows:
@@ -18,7 +18,7 @@ These scrubbers are designed to perform a PESTLE analysis, ensuring comprehensiv
 The data is collected from a variety of sources, including news websites, business magazines, weather services, and legal databases.
 
 ## Architecture
-The project is built using Django for the backend and PostgreSQL for the database. The architecture is designed to support local deployment while being future-proofed for potential deployment on platforms like Heroku.
+The project is built using Django for the backend and PostgreSQL for the database. The architecture is designed to support local deployment while being future-proofed for potential deployment on platforms like Heroku
 
 ## Deployment
 To deploy the project locally, follow these steps:
@@ -52,6 +52,9 @@ Future enhancements and planned features include:
 - create a way to backup db - maybe json files?
 - data cleansing
 - data annotation
+
+## V0.3.5
+- implemented centralised tasks update
 
 ## V0.3.4
 - implemented technology scraper with inquirer scraper
@@ -104,6 +107,8 @@ Future enhancements and planned features include:
 - json to db (backup reupload)
 - dashboard
 - jupyter in a webpage
+- need to refine message pop up - task completed not showing on ui
+- pause long tasks?
 
 
 ## NOTES
@@ -124,7 +129,4 @@ Duplicate records are check during weather fetching.
 Making the pause the app midway through needs a bit more thought and I think i'll push this at a later date when refining the function
 
 for now i need to work on being able to code the other parts of the app so i have a functional multi purpose scrubber
-
-but for instructions we'd be using Celery and here's how.
-
 ------------

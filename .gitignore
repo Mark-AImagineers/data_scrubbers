@@ -2,6 +2,7 @@ scrubbers/config.py
 logs/
 test.py
 commands.md
+csv/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
