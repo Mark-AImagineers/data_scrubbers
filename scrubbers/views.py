@@ -15,6 +15,10 @@ from celery.result import AsyncResult
 from .forms import ScraperForm, BusinessForm, TechnologyForm
 from .tasks import run_scrapy_spider
 from django.contrib import messages
+import csv
+from django.apps import apps
+import os
+from django.contrib.auth.decorators import login_required, permission_required
 
 
 logger = logging.getLogger('data_scrub_log')
@@ -22,7 +26,36 @@ logger = logging.getLogger('data_scrub_log')
 print(f"-----Started Django Server-----")
 logger.info(f"-----Started Django Server-----")
 
+db_to_url_name = {
+    'PoliticalNews': 'politics_scrubber',
+    'BusinessNews': 'business_scrubber',
+    'TechnologyNews': 'technology_scrubber',
+    'WeatherData': 'weather_scrubber',
+    'None': 'index'
+}
+
 ## FUNCTIONS
+
+def manage_task_session(request, task_type, async_task):
+    request.session['current_task'] = {'id': async_task.id, 'type': task_type}
+    request.session['message_added'] = False
+
+def check_and_manage_task(request):
+    task_info = request.session.get('current_task', None)
+    message_added = request.session.get('message_added', False)
+    
+    if task_info:
+        result = AsyncResult(task_info['id'])
+        if result.ready() and not message_added:
+            messages.info(request, f"{task_info['type']} scrubber task {task_info['id']} completed!")
+            request.session.pop('current_task')
+            request.session['message_added'] = True
+            return None
+        elif not result.ready() and not message_added:
+            messages.info(request, f"{task_info['type']} scrubber task {task_info['id']} is still running.")
+            request.session['message_added'] = True
+        return task_info
+    return None
 
 ## VIEWS
 def test_environment(request):
@@ -31,7 +64,7 @@ def index(request):
     return render(request, 'index.html')
 
 def weather_scrubber(request):
-    logger.info("User navigated to weather scrubber page")
+    request.session['db_type'] = 'WeatherData'
     if request.method == 'POST':
         logger.info("Weather Scrubber POST request received")
         startdate = request.POST['date1']
@@ -86,56 +119,99 @@ def delete_entry(request, regional_id):
     return redirect('manage_regions')
 
 def politics_scrubber(request):
+    request.session['db_type'] = 'PoliticalNews'
     form = ScraperForm()
     if request.method == 'POST':
         form = ScraperForm(request.POST)
         if form.is_valid():
             scraper_type = form.cleaned_data['scraper_type']
-            start_page = form.cleaned_data['start_page'] 
+            start_page = form.cleaned_data['start_page']
             end_page = form.cleaned_data['end_page']
-
-            run_scrapy_spider.delay(scraper_type, start_page, end_page)
-            messages.success(request, "Scraper has been started!")
+            
+            async_task = run_scrapy_spider.delay(scraper_type, start_page, end_page)
+            manage_task_session(request, scraper_type, async_task)
             return redirect('politics_scrubber')
-        
         else:
             return render(request, 'political_scrubber.html', {'form': form})
-        
-    return render(request, 'political_scrubber.html', {'form': form})
+    else:
+        if check_and_manage_task(request) is None:
+            request.session['message_added'] = False
+        return render(request, 'political_scrubber.html', {'form': form})
 
 def business_scrubber(request):
+    request.session['db_type'] = 'BusinessNews'
     form = BusinessForm()
     if request.method == 'POST':
         form = BusinessForm(request.POST)
         if form.is_valid():
             scraper_type = form.cleaned_data['scraper_type']
-            start_page = form.cleaned_data['start_page'] 
+            start_page = form.cleaned_data['start_page']
             end_page = form.cleaned_data['end_page']
-
-            run_scrapy_spider.delay(scraper_type, start_page, end_page)
-            messages.success(request, "Scraper has been started!")
+            
+            async_task = run_scrapy_spider.delay(scraper_type, start_page, end_page)
+            manage_task_session(request, scraper_type, async_task)
             return redirect('business_scrubber')
-        
         else:
             return render(request, 'business_scrubber.html', {'form': form})
-    
-    return render(request, 'business_scrubber.html', {'form': form})
+    else:
+        if check_and_manage_task(request) is None:
+            request.session['message_added'] = False
+        return render(request, 'business_scrubber.html', {'form': form})
 
 
 def technology_scrubber(request):
+    request.session['db_type'] = 'TechnologyNews'
     form = TechnologyForm()
     if request.method == 'POST':
         form = TechnologyForm(request.POST)
         if form.is_valid():
             scraper_type = form.cleaned_data['scraper_type']
-            start_page = form.cleaned_data['start_page'] 
+            start_page = form.cleaned_data['start_page']
             end_page = form.cleaned_data['end_page']
-
-            run_scrapy_spider.delay(scraper_type, start_page, end_page)
-            messages.success(request, "Scraper has been started!")
+            
+            async_task = run_scrapy_spider.delay(scraper_type, start_page, end_page)
+            manage_task_session(request, scraper_type, async_task)
             return redirect('technology_scrubber')
-        
         else:
             return render(request, 'technology_scrubber.html', {'form': form})
+    else:
+        if check_and_manage_task(request) is None:
+            request.session['message_added'] = False
+        return render(request, 'technology_scrubber.html', {'form': form})
     
-    return render(request, 'technology_scrubber.html', {'form': form})
+
+@login_required
+@permission_required('app.view_model', raise_exception=True)
+def export_to_csv(request):
+    db_type = request.session.get('db_type', None)
+    redirect_url = db_to_url_name[db_type]
+    logger.info(f"DB TYPE: {db_type}")
+    messages.info(request, f"PENDING: Exporting {db_type} DB to CSV...")
+
+    csv_dir = "./csv/"
+
+    if not os.path.exists(csv_dir):
+        os.makedirs(csv_dir)
+        logger.info(f"Created {csv_dir}")
+
+    try:
+        model = apps.get_model('scrubbers', db_type)
+        logger.info(f"Using {model} model")
+    except LookupError:
+        messages.error(request, "Invalid model type provided")
+        logger.info(f"Invalid model type provided")
+        return redirect(redirect_url)
+    
+    filename = os.path.join(csv_dir, f"{db_type}.csv")
+    with open(filename, 'w', newline='') as file:
+        writer = csv.writer(file)
+        headers = [field.name for field in model._meta.fields]
+        writer.writerow(headers)
+        for instance in model.objects.all():
+            writer.writerow([getattr(instance, field) for field in headers])
+
+    logger.info(f"Exported {db_type} DB to {csv_dir}")
+    messages.info(request, f"SUCCESS: Exported {db_type} DB to {csv_dir}")               
+
+    
+    return redirect(redirect_url)

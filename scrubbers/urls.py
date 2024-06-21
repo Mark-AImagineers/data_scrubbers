@@ -10,4 +10,5 @@ urlpatterns = [
     path('test/', test_environment, name='test_environment'),
     path('business/', business_scrubber, name='business_scrubber'),
     path('technology/', technology_scrubber, name='technology_scrubber'),
+    path('export_to_json/', export_to_csv, name='export_to_csv'),
 ]
