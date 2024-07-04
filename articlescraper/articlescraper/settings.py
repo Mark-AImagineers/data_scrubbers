@@ -65,7 +65,8 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    "articlescraper.pipelines.PostgresPipeline": 300,
+    "articlescraper.pipelines.TextCleaningPipeline": 300,
+    "articlescraper.pipelines.PostgresPipeline": 400,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

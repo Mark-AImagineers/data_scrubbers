@@ -10,8 +10,25 @@ import psycopg2
 import os
 import dj_database_url
 import logging
+import re
+import html
+from scrapy.exceptions import DropItem
 
 logger = logging.getLogger(__name__)
+
+
+def clean_html(input_text):
+    cleaned_text = re.sub(r'<[^>]*?>', '', input_text)
+    cleaned_text = html.unescape(cleaned_text)
+    return cleaned_text
+
+class TextCleaningPipeline(object):
+    def process_item(self, item, spider):
+        if item.get('full_text'):
+            item['full_text'] = clean_html(item['full_text'])
+            return item
+        else:
+            raise DropItem("Missing full_text in item")
 
 class PostgresPipeline(object):
     def open_spider(self, spider):

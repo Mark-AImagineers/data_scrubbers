@@ -1,6 +1,8 @@
 import scrapy
 import json
 import logging
+import re
+import html
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +50,16 @@ class InquirerspiderSpider(scrapy.Spider):
             except json.JSONDecodeError as e:
                 self.logger.error(f"JSON decode error at {response.url}: {str(e)}")
                 item['full_text'] = 'Error decoding JSON'
+
+            item['full_text'] = self.clean_html(item['full_text'])
+
             yield item
-
-
+    
+    def clean_html(self, input_text):
+        cleaned_text = re.sub(r'<[^>]*?>', '', input_text)
+        cleaned_text = html.unescape(cleaned_text)
+        return cleaned_text
+    
 
 
 # response.css('div#ch-ls-head div#ch-cat:contains("Headlines") + h2 a::attr(href)').getall() -- this will get all the url links (headlines only not including trending)

@@ -49,12 +49,15 @@ Future enhancements and planned features include:
 # Version History
 
 ## pending
-- create a way to backup db - maybe json files?
 - data cleansing
 - data annotation
 
+
 ## V0.3.5
 - implemented centralised tasks update
+- implemented cleansing of data - the function is being tested and works inside test.py
+- phase 1 - implement this as a stand alone function to clean data through the use of a button
+- phase 2 - implement this as a function within crawler to run through after scraping data 
 
 ## V0.3.4
 - implemented technology scraper with inquirer scraper
