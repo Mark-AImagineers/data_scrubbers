@@ -13,19 +13,46 @@ import logging
 import re
 import html
 from scrapy.exceptions import DropItem
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
+def decode_html_entitites(text):
+    replacements = {
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&quot;': '"',
+        '&apos;': "'",
+        '&nbsp;': ' ',
+        '&#39;': "'",
+        '&#34;': '"',
+        '&#60;': '<',
+        '&#62;': '>',
+        '&#160;': ' ',
+        '&#161;': '!',
+        '&nbsp;':' ',
+        '&amp;nbsp;':' ',
+    }
+    for key, value in replacements.items():
+        text = text.replace(key, value)
+    return text
 
-def clean_html(input_text):
-    cleaned_text = re.sub(r'<[^>]*?>', '', input_text)
-    cleaned_text = html.unescape(cleaned_text)
+def extract_text(html_content):
+    html_content = decode_html_entitites(html_content)
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    for script_or_style in soup(["script", "style"]):
+        script_or_style.decompose()
+    
+    text = soup.get_text(separator=' ')
+    cleaned_text = ' '.join(text.split())
     return cleaned_text
 
 class TextCleaningPipeline(object):
     def process_item(self, item, spider):
         if item.get('full_text'):
-            item['full_text'] = clean_html(item['full_text'])
+            item['full_text'] = extract_text(item['full_text'])
             return item
         else:
             raise DropItem("Missing full_text in item")
