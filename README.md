@@ -52,12 +52,13 @@ Future enhancements and planned features include:
 - data cleansing
 - data annotation
 
+## V0.3.6
+- pending - data annotation
 
 ## V0.3.5
 - implemented centralised tasks update
 - implemented cleansing of data - the function is being tested and works inside test.py
-- phase 1 - implement this as a stand alone function to clean data through the use of a button
-- phase 2 - implement this as a function within crawler to run through after scraping data 
+- implemented cleansing function as part of scrapy
 
 ## V0.3.4
 - implemented technology scraper with inquirer scraper

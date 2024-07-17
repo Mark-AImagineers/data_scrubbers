@@ -17,7 +17,8 @@ from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
-def decode_html_entities(text):
+
+def decode_html_entitites(text):
     replacements = {
         '&amp;': '&',
         '&lt;': '<',
@@ -39,10 +40,10 @@ def decode_html_entities(text):
     return text
 
 def extract_text(html_content):
-    html_content = decode_html_entities(html_content)
-    soup = BeautifulSoup(html_content, 'html.parser')
+    html_content = decode_html_entitites(html_content)
+    soup = BeautifulSoup(html_content, "html.parser")
 
-    for script_or_style in soup(['script','style']):
+    for script_or_style in soup(["script", "style"]):
         script_or_style.decompose()
     
     text = soup.get_text(separator=' ')
