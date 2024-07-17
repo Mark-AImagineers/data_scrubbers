@@ -20,6 +20,8 @@ The data is collected from a variety of sources, including news websites, busine
 ## Architecture
 The project is built using Django for the backend and PostgreSQL for the database. The architecture is designed to support local deployment while being future-proofed for potential deployment on platforms like Heroku
 
+Project is based on Python: 3.10
+
 ## Deployment
 To deploy the project locally, follow these steps:
 1. Clone the repository.
@@ -27,14 +29,22 @@ To deploy the project locally, follow these steps:
 3. Set up the PostgreSQL database.
 4. Run the Django server.
 
+Installing in dockers need to remove the following from requirements.txt
+- twisted-iocpsupport (remove)
+- tensorflow-intel and tensorflow (remove only the version let pip resolve)
+-
+
+
 Detailed setup instructions will be provided below.
 
 ## Dependencies
 The primary dependencies for this project include:
+- Python 3.10
 - Django
 - PostgreSQL
 - Django REST framework (for building APIs)
 - Additional libraries as needed for specific data sources and scrubbing tasks.
+- Docker
 
 ## Usage
 Users can interact with the project through a RESTful API, which allows them to initiate data scrubbing tasks, retrieve scrubbed data, and manage the data collection process.
@@ -52,7 +62,7 @@ Future enhancements and planned features include:
 - data cleansing
 - data annotation
 
-## V0.3.6
+## V0.4.0
 - pending - data annotation
 
 ## V0.3.5
@@ -117,8 +127,6 @@ Future enhancements and planned features include:
 
 ## NOTES
 - Technology through inquirer.net only has 219 pages. - will scrub this as soon as its working and latest news will always be on page 1.
-
-
 
 ## Journal
 

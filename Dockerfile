@@ -1,35 +1,24 @@
-FROM python:3.11.4-alpine
+FROM python:3.10
 
 WORKDIR /usr/src/app
 
-# Prevent Python from writing .pyc files to disk
 ENV PYTHONDONTWRITEBYTECODE 1
-
-# Ensure Python output is sent directly to the terminal without buffering
 ENV PYTHONUNBUFFERED 1
 
-# Upgrade pip
-RUN pip install --upgrade pip
-
-# Install system dependencies for common packages
-# This might include dependencies used in Django/Scrapy projects
-
-RUN apk add --no-cache netcat-openbsd
-
-RUN apk add --no-cache --virtual .build-deps gcc musl-dev \
-    && apk add --no-cache jpeg-dev zlib-dev libxml2-dev libxslt-dev
-
-RUN apk add --no-cache gcc musl-dev linux-headers libc-dev
-
-# Install Python dependencies
 COPY requirements.txt .
-RUN pip install -r requirements.txt
 
-# Copy the entire project
+RUN pip install --upgrade pip \
+    && apt-get update \
+    && apt-get install -y netcat-openbsd libjpeg-dev zlib1g-dev libxml2-dev libxslt1-dev \
+    && apt-get install -y --no-install-recommends build-essential \
+    && pip install --no-cache-dir -r requirements.txt \
+    && apt-get remove -y build-essential \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY . .
 
-# Ensure entrypoint script is executablesss
 RUN chmod +x data_scrub/entrypoint.sh
 
-# Set the entrypoint to the script
 ENTRYPOINT ["./data_scrub/entrypoint.sh"]

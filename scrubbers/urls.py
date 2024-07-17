@@ -11,4 +11,5 @@ urlpatterns = [
     path('business/', business_scrubber, name='business_scrubber'),
     path('technology/', technology_scrubber, name='technology_scrubber'),
     path('export_to_json/', export_to_csv, name='export_to_csv'),
+    path('summarize_news/', summarize_news, name='summarize_news'),
 ]

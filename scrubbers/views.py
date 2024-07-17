@@ -1,24 +1,27 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from .config import api_key
-from .models import Region, WeatherData, HourlyTemperature, PoliticalNews
-import requests
 from django.contrib import messages
 from django.shortcuts import render
 from webdriver_manager.chrome import ChromeDriverManager
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib import messages
+from celery.result import AsyncResult
+from django.contrib import messages
+from django.apps import apps
+from django.contrib.auth.decorators import login_required, permission_required
+from django.utils import timezone
+
+import requests
+import os
+import csv
 import requests as re
 import logging
-from django.contrib import messages
+
+from .config import api_key
+from .models import *
 from .tasks import *
-from celery.result import AsyncResult
 from .forms import ScraperForm, BusinessForm, TechnologyForm
 from .tasks import run_scrapy_spider
-from django.contrib import messages
-import csv
-from django.apps import apps
-import os
-from django.contrib.auth.decorators import login_required, permission_required
 
 
 logger = logging.getLogger('data_scrub_log')
@@ -33,6 +36,19 @@ db_to_url_name = {
     'WeatherData': 'weather_scrubber',
     'None': 'index'
 }
+
+db_to_metrics = {
+    'PoliticalNews': (PolNews_Metrics, 'political_news'),
+    'BusinessNews': (BusNews_Metrics,'business_news'),
+    'TechnologyNews': (TechNews_Metrics, 'technology_news'),
+}
+
+db_to_model = {
+    'PoliticalNews': PoliticalNews,
+    'BusinessNews': BusinessNews,
+    'TechnologyNews': TechnologyNews,
+}
+
 
 ## FUNCTIONS
 
@@ -216,4 +232,41 @@ def export_to_csv(request):
     
     return redirect(redirect_url)
 
-# test pull request
+@login_required
+def summarize_news(request):
+    from transformers import pipeline
+    summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+    db_type = request.session.get('db_type', None)
+    redirect_url = db_to_url_name[db_type]
+
+    if db_type not in db_to_model:
+        messages.error(request, "Invalid model type provided")
+        logger.info(f"Invalid model type provided")
+        return redirect(redirect_url)
+    
+    ModelClass = db_to_model[db_type]
+    MetricsClass, fk_field = db_to_metrics[db_type]
+    news_articles = ModelClass.objects.all()
+
+    logger.info(f"DB TYPE: {db_type}")
+    messages.info(request, f"PENDING: Sumarizing all {db_type} entries...")   
+
+    for article in news_articles:
+        if article.full_text:
+            try:
+                summary_result = summarizer(article.full_text, max_length=130, min_length=30, do_sample=False)
+                if summary_result:
+                    summary_text = summary_result[0]['summary_text']
+                    metrics_instance, created = MetricsClass.objects.get_or_create(**{fk_field: article})
+                    metrics_instance.summary = summary_text
+                    metrics_instance.updated_at = timezone.now()
+                    metrics_instance.save()
+                    logger.info("Successfully summarized article ID: %s", article.id)
+                    messages.info(f"SUCCESS: Summarized article {article.id}")
+            except Exception as e:
+                logger.error("Error summarizing article ID: %s: %s", article.id, str(e))
+                messages.error(request, f"Error summarizing article {article.id}: {str(e)}")
+
+
+    messages.info(request, f"COMPLETED: Summarized all {db_type} entries")
+    return redirect(redirect_url)

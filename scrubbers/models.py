@@ -60,10 +60,10 @@ class PoliticalNews(models.Model):
     
 class PolNews_Metrics(models.Model):
     political_news = models.ForeignKey(PoliticalNews, on_delete=models.CASCADE)
-    summary = models.CharField(max_length=255, null=True, blank=True)
+    summary = models.CharField(null=True, blank=True)
     sentiment_score = models.FloatField(null=True, blank=True)
-    sentiment_classification = models.CharField(max_length=255, null=True, blank=True)
-    named_entities = models.CharField(max_length=255, null=True, blank=True)
+    sentiment_classification = models.CharField(null=True, blank=True)
+    named_entities = models.CharField(null=True, blank=True)
     key_phrases = models.TextField(null=True, blank=True)
     engagement_metrics = models.JSONField(null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
@@ -85,10 +85,10 @@ class BusinessNews(models.Model):
     
 class BusNews_Metrics(models.Model):
     business_news = models.ForeignKey(BusinessNews, on_delete=models.CASCADE)
-    summary = models.CharField(max_length=255, null=True, blank=True)
+    summary = models.CharField(null=True, blank=True)
     sentiment_score = models.FloatField(null=True, blank=True)
-    sentiment_classification = models.CharField(max_length=255, null=True, blank=True)
-    named_entities = models.CharField(max_length=255, null=True, blank=True)
+    sentiment_classification = models.CharField(null=True, blank=True)
+    named_entities = models.CharField(null=True, blank=True)
     key_phrases = models.TextField(null=True, blank=True)
     engagement_metrics = models.JSONField(null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
@@ -110,10 +110,10 @@ class TechnologyNews(models.Model):
 
 class TechNews_Metrics(models.Model):
     technology_news = models.ForeignKey(TechnologyNews, on_delete=models.CASCADE)
-    summary = models.CharField(max_length=255, null=True, blank=True)
+    summary = models.CharField(null=True, blank=True)
     sentiment_score = models.FloatField(null=True, blank=True)
-    sentiment_classification = models.CharField(max_length=255, null=True, blank=True)
-    named_entities = models.CharField(max_length=255, null=True, blank=True)
+    sentiment_classification = models.CharField(null=True, blank=True)
+    named_entities = models.CharField(null=True, blank=True)
     key_phrases = models.TextField(null=True, blank=True)
     engagement_metrics = models.JSONField(null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
