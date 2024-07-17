@@ -17,6 +17,7 @@ from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
+
 def decode_html_entitites(text):
     replacements = {
         '&amp;': '&',
